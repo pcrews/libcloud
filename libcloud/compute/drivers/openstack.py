@@ -22,6 +22,7 @@ except ImportError:
     import json
 
 import warnings
+import time
 
 from itertools import chain
 
@@ -126,7 +127,7 @@ class OpenStackComputeConnection(OpenStackBaseConnection):
     # default config for http://devstack.org/
     service_type = 'compute'
     service_name = 'nova'
-    service_region = 'RegionOne'
+    service_region = 'RegionOne' 
 
     def request(self, action, params=None, data='', headers=None,
                 method='GET'):
@@ -976,11 +977,31 @@ class OpenStack_1_1_NodeDriver(OpenStackNodeDriver):
                                        data={'server': server_params})
 
         create_response = resp.object['server']
-        server_resp = self.connection.request(
-            '/servers/%s' % create_response['id'])
-        server_object = server_resp.object['server']
+        attempts_remain = 10
+        sleep_time = 30
+        have_public_ip = False
+        active_status = False
+        first_run = True
+        while attempts_remain and not have_public_ip and not active_status:
+            attempts_remain -= 1
+            if not first_run:
+                time.sleep(sleep_time)
+            first_run = False
+            server_resp = self.connection.request(
+                '/servers/%s' % create_response['id'])
+            server_object = server_resp.object['server']
+            if server_object['status'] == 'ACTIVE':
+                active_status = True
+            if 'addresses' in server_object:
+                if 'private' in server_object['addresses']:
+                    addresses = server_object['addresses']['private']
+                    filter_list = []
+                    for addr in addresses:
+                        if not addr['addr'].startswith('10.') and not addr['addr'].startswith('192.168.'):
+                            filter_list.append(addr)
+                            have_public_ip = True
+                            server_object['addresses']['private'] = filter_list
         server_object['adminPass'] = create_response['adminPass']
-
         return self._to_node(server_object)
 
     def _to_images(self, obj, ex_only_active):
