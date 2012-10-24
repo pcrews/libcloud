@@ -997,10 +997,27 @@ class OpenStack_1_1_NodeDriver(OpenStackNodeDriver):
                     addresses = server_object['addresses']['private']
                     filter_list = []
                     for addr in addresses:
-                        if not addr['addr'].startswith('10.') and not addr['addr'].startswith('192.168.'):
+                        if not addr['addr'].startswith('10.') \
+                           and not addr['addr'].startswith('192.168.') \
+                           and not addr['addr'].startswith('172.16.')  \
+                           and not addr['addr'].startswith('172.17.')  \
+                           and not addr['addr'].startswith('172.18.')  \
+                           and not addr['addr'].startswith('172.19.')  \
+                           and not addr['addr'].startswith('172.20.')  \
+                           and not addr['addr'].startswith('172.21.')  \
+                           and not addr['addr'].startswith('172.22.')  \
+                           and not addr['addr'].startswith('172.23.')  \
+                           and not addr['addr'].startswith('172.24.')  \
+                           and not addr['addr'].startswith('172.25.')  \
+                           and not addr['addr'].startswith('172.26.')  \
+                           and not addr['addr'].startswith('172.27.')  \
+                           and not addr['addr'].startswith('172.28.')  \
+                           and not addr['addr'].startswith('172.29.')  \
+                           and not addr['addr'].startswith('172.30.')  \
+                           and not addr['addr'].startswith('172.31.'):
                             filter_list.append(addr)
                             have_public_ip = True
-                            server_object['addresses']['private'] = filter_list
+                            server_object['addresses']['public'] = filter_list
         server_object['adminPass'] = create_response['adminPass']
         return self._to_node(server_object)
 
